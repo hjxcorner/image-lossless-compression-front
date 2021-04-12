@@ -1,0 +1,16 @@
+{
+  "id": "2479497",
+  "name": "图片压缩",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "1703536",
+      "name": "下载",
+      "font_class": "load",
+      "unicode": "e647",
+      "unicode_decimal": 58951
+    }
+  ]
+}
