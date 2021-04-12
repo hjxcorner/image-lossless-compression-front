@@ -1,9 +1,22 @@
 <template>
   <div id="app">
-    首页
+    <Header />
+    <UploadImage />
     <router-view/>
   </div>
 </template>
+
+<script>
+import Header from '@/components/Header'
+import UploadImage from '@/components/UploadImage'
+
+export default {
+  components: {
+    Header,
+    UploadImage
+  }
+}
+</script>
 
 <style lang="scss">
 #app {
@@ -14,9 +27,12 @@
   color: #2c3e50;
 }
 
-#nav {
-  padding: 30px;
+body {
+  margin: 0;
+  padding: 0;
+}
 
+#nav {
   a {
     font-weight: bold;
     color: #2c3e50;
