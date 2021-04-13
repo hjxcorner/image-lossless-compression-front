@@ -2,6 +2,7 @@
   <div id="app">
     <Header />
     <UploadImage />
+    <!-- <UploadInput / > -->
     <router-view/>
   </div>
 </template>
@@ -9,16 +10,21 @@
 <script>
 import Header from '@/components/Header'
 import UploadImage from '@/components/UploadImage'
+// import UploadInput from '@/components/UploadInput'
 
 export default {
   components: {
     Header,
     UploadImage
+    // UploadInput
   }
 }
 </script>
 
 <style lang="scss">
+html {
+  background: rgb(241, 241, 241);
+}
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

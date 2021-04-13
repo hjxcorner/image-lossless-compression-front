@@ -7,19 +7,66 @@
     <div class="uploadText">
       <i class="iconfont icon-load"></i>
       <span>将jpg格式或png格式的图片拖动到这里</span>
-      <span>最多可添加20张图片，且图片不得大于5MB</span>
+      <span>最多可添加{{imgNumberLimit}}张图片，且图片不得大于{{maxSizeMb}}MB</span>
+      <input
+        class="uploadInput"
+        type="file"
+        accept=".png, .jpg, .jpeg"
+        ref='uploadInput'
+        @change="UploadFile"
+        multiple
+      />
+    </div>
+    <div
+      class="scheduleBox"
+      v-if="images.length"
+    >
+      <div
+        class="scheduleItem"
+        v-for="image in images"
+        :key="image.name"
+      >
+        <div class="left">
+          <img
+            :src="image.content"
+            alt="image.name"
+          >
+          <span>{{image.name}}</span>
+        </div>
+        <div class="center">
+          <span>{{image.size}}</span>
+          <div style="width:100%;">
+            <el-progress
+              :text-inside="true"
+              :stroke-width="20"
+              :percentage="100"
+            ></el-progress>
+          </div>
+        </div>
+        <div class="right">
+          <span class="downLoad">下载</span>
+        </div>
+
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import config from "../../public/config";
+
 export default {
   data() {
     return {
       images: [],
-      imgNumberLimit: 9,
-      maxSize: 10240000 / 2
+      imgNumberLimit: config.imgNumberLimit,
+      maxSize: config.maxSize
     };
+  },
+  computed: {
+    maxSizeMb() {
+      return this.maxSize / (1024 * 1024);
+    }
   },
   mounted() {
     this.$nextTick(() => {
@@ -29,18 +76,7 @@ export default {
       this.$refs.select_frame.ondrop = e => {
         e.preventDefault();
         const files = [...e.dataTransfer.files];
-        let isImage;
-        const images = files.filter(item => {
-          isImage = item.type.indexOf("image") > -1;
-          if (!isImage) {
-            this.$message({
-              showClose: true,
-              message: `文件${item.name}不是图片`,
-              type: "error"
-            });
-          }
-          return isImage;
-        });
+        const images = this.fileFilter(files);
         this.render(images);
       };
       this.$refs.select_frame.ondragenter = e => {
@@ -57,20 +93,47 @@ export default {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
-          const img = new Image();
-          img.src = reader.result;
-          this.images.push(reader.result);
-          img.style.height = "100px";
-          this.$refs.select_frame.appendChild(img);
           console.log(file);
+          const data = {
+            name: file.name,
+            content: reader.result,
+            size:
+              file.size > 1048576
+                ? (file.size / (1024 * 1024)).toFixed(1) + "MB"
+                : (file.size / 1024).toFixed(1) + "KB"
+          };
+          this.images.push(data);
           this.$http
-            .post("/images/saveImage", {
-              name: file.name,
-              content: reader.result
-            })
+            .post("/images/saveImage", data)
             .then(data => console.log(data))
             .catch(err => console.log(err));
         };
+      });
+    },
+    UploadFile() {
+      const uploadInput = this.$refs.uploadInput;
+      const files = this.fileFilter([...uploadInput.files]);
+      this.render(files);
+    },
+    fileFilter(files) {
+      let isImage, isTooBig;
+      return files.filter(item => {
+        isImage = item.type.indexOf("image") > -1;
+        isTooBig = item.size > this.maxSize;
+        if (!isImage) {
+          this.$message({
+            showClose: true,
+            message: `文件${item.name}不是jpg/png格式`,
+            type: "error"
+          });
+        } else if (isTooBig) {
+          this.$message({
+            showClose: true,
+            message: `文件${item.name}大于${this.maxSizeMb}MB`,
+            type: "error"
+          });
+        }
+        return isImage && !isTooBig;
       });
     }
   }
@@ -79,18 +142,20 @@ export default {
 
 <style lang='scss' scoped>
 .UploadImage {
-  width: 500px;
-  height: 400px;
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   display: flex;
-  border: 1px #333 dashed;
-  border-radius: 5%;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
   .uploadText {
-    width: 100%;
-    height: 100%;
+    position: relative;
+    width: 400px;
+    height: 300px;
+    border: 1px #333 dashed;
+    border-radius: 5%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -100,11 +165,64 @@ export default {
     }
     span {
       font-size: 18px;
-      &:last-child {
+      &:nth-child(3) {
         font-size: 14px;
         color: rgb(173, 173, 173);
       }
     }
+    .uploadInput {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+  }
+  .scheduleBox {
+    margin: 20px 0;
+    width: 80vw;
+    padding: 12px;
+    background: #fff;
+    .scheduleItem {
+      height: 30px;
+      background: rgb(241, 241, 241);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      .left {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        img {
+          height: 90%;
+          margin: 4px;
+        }
+        span {
+          font-size: 14px;
+        }
+      }
+      .center {
+        display: flex;
+        align-items: center;
+        width: 50%;
+      }
+      .right {
+        display: flex;
+        align-items: center;
+        .downLoad {
+          cursor: pointer;
+          font-size: 14px;
+          &:hover {
+            color: #409EFF;
+          }
+        }
+      }
+    }
+  }
+  &:hover {
+    border-color: #78c3f3;
   }
 }
 </style>
