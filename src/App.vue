@@ -1,22 +1,16 @@
 <template>
   <div id="app">
     <Header />
-    <UploadImage />
-    <!-- <UploadInput / > -->
     <router-view/>
   </div>
 </template>
 
 <script>
 import Header from '@/components/Header'
-import UploadImage from '@/components/UploadImage'
-// import UploadInput from '@/components/UploadInput'
 
 export default {
   components: {
-    Header,
-    UploadImage
-    // UploadInput
+    Header
   }
 }
 </script>
