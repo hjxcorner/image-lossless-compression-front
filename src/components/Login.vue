@@ -13,6 +13,7 @@
         <el-form
           :model="loginForm"
           :rules="rules"
+          ref="loginForm"
         >
           <el-form-item
             label="账号"
@@ -69,6 +70,7 @@
         <el-form
           :model="registeredForm"
           :rules="rules"
+          ref="registerForm"
         >
           <el-form-item
             label="账号"
@@ -263,9 +265,57 @@ export default {
     },
     register() {
       console.log(this.registeredForm);
+      let isPass = true;
+      this.$refs.registerForm.validate(valid => {
+        isPass = valid;
+      });
+      if (isPass) {
+        this.$http
+          .post("/users/register", this.registeredForm)
+          .then(data => {
+            if (data.data.success) {
+              this.$message({
+                showClose: true,
+                message: data.data.data.msg,
+                type: "success"
+              });
+              this.close();
+            } else {
+              this.$message({
+                showClose: true,
+                message: data.data.data.msg,
+                type: "error"
+              });
+            }
+          })
+          .catch(err => console.log(err));
+      }
     },
     login() {
-      console.log(this.loginForm);
+      let isPass = true;
+      this.$refs.loginForm.validate(valid => {
+        isPass = valid;
+      });
+      if (isPass) {
+        this.$http
+          .post("/users/login", this.loginForm)
+          .then(data => {
+            console.log(data.data.success);
+            if (data.data.success) {
+              this.$message({
+                showClose: true,
+                message: `登录成功`,
+                type: "success"
+              });
+              this.close();
+            }
+            const token = data.data.data.token;
+            const userData = data.data.data.userData;
+            window.localStorage.setItem("token", token);
+            window.localStorage.setItem("userData", JSON.stringify(userData));
+          })
+          .catch(err => console.log(err));
+      }
     },
     checkVerifiCode(rule, value, callback) {
       if (!value) callback(new Error("请输入验证码"));
@@ -276,7 +326,7 @@ export default {
     },
     checkRePass(rule, value, callback) {
       if (!value) callback(new Error("请再次输入密码"));
-      else if (value !== this.identifyCode)
+      else if (value !== this.registeredForm.pass)
         callback(new Error("两次输入密码不一致"));
     }
   }
