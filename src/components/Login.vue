@@ -242,7 +242,8 @@ export default {
     },
     changeType() {
       this.type = !this.type;
-      this.initFormData();
+      if (this.type) this.$refs.registerForm.resetFields();
+      else this.$refs.loginForm.resetFields();
     },
     close() {
       this.closeDialog();
