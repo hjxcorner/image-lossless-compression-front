@@ -31,7 +31,7 @@
       </router-link>
     </el-menu>
     <Login
-      v-if="!isLogin"
+      v-if="!isLogin()"
       :dialogFormVisible="dialogFormVisible"
       :closeDialog="closeDialog"
     />
@@ -50,11 +50,6 @@ export default {
       dialogFormVisible: false
     };
   },
-  computed: {
-    isLogin() {
-      return false;
-    }
-  },
   methods: {
     handleSelect(key, keyPath) {
       console.log(key, keyPath);
@@ -64,6 +59,9 @@ export default {
     },
     closeDialog() {
       this.dialogFormVisible = false;
+    },
+    isLogin() {
+      return localStorage.getItem("token");
     }
   }
 };
