@@ -13,6 +13,8 @@ Vue.use(ElementUI);
 
 Vue.prototype.$http = Axios
 Axios.defaults.baseURL = 'http://localhost:3000';
+const token = window.localStorage.getItem('token');
+Axios.defaults.headers.common['Authorization'] = token;
 
 new Vue({
   router,
