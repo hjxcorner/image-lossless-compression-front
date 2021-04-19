@@ -8,6 +8,7 @@ Vue.use(VueRouter)
 
 const routes: Array<RouteConfig> = [
   {path: '/', component: ImageCompression},
+  {path: '/compression', component: ImageCompression},
   {path: '/conversion', component: FormatConversion},
   {path: '/personal', component: PersonalCenter},
 ]
