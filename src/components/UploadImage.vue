@@ -19,22 +19,22 @@
     </div>
     <div
       class="scheduleBox"
-      v-if="images.length"
+      v-if="Object.keys(images).length"
     >
       <div
         class="scheduleItem"
-        v-for="image in images"
-        :key="image.name"
+        v-for="(image, name) in images"
+        :key="name"
       >
         <div class="left">
           <img
             :src="image.content"
-            alt="image.name"
+            alt="图片名"
           >
           <span>{{image.name}}</span>
         </div>
         <div class="center">
-          <span>{{image.size}}</span>
+          <span>{{transSize(image.size)}}</span>
           <div style="width:100%;">
             <el-progress
               :text-inside="true"
@@ -42,33 +42,63 @@
               :percentage="100"
             ></el-progress>
           </div>
+          <span>{{transSize(image.curSize)}}</span>
         </div>
         <div class="right">
-          <span class="downLoad">下载</span>
+          <span class="downLoad">对比</span>
+          <a
+            :href="image.content"
+            download
+          >
+            <span class="downLoad">下载</span>
+          </a>
         </div>
-
       </div>
+    </div>
+    <div
+      class="dowmloadAll"
+      v-if="Object.keys(images).length"
+    >
+      <el-button
+        type="primary"
+        icon="el-icon-download"
+        :loading="finishAll"
+      >下载全部</el-button>
     </div>
   </div>
 </template>
 
 <script>
 import config from "../../public/config";
+import { mapGetters } from "vuex";
 
 export default {
   data() {
     return {
-      images: [],
+      images: {},
       imgNumberLimit: config.imgNumberLimit,
-      maxSize: config.maxSize
+      maxSize: config.maxSize,
+      imgBaseUrl: "http://localhost:3000/public/images"
     };
   },
   computed: {
+    ...mapGetters(["userData"]),
     maxSizeMb() {
       return this.maxSize / (1024 * 1024);
+    },
+    finishAll() {
+      const arr = Object.keys(this.images);
+      if (!arr.length) {
+        return true;
+      } else {
+        return !arr.every(item => {
+          return this.images[item].curSize !== '';
+        });
+      }
     }
   },
   mounted() {
+    console.log(this.userData);
     this.$nextTick(() => {
       this.$refs.select_frame.ondragleave = e => {
         e.preventDefault(); // 阻止离开时的浏览器默认行为
@@ -89,23 +119,26 @@ export default {
   },
   methods: {
     render(files) {
-      files.forEach(file => {
+      files.forEach((file, index) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
+        console.log(file);
         reader.onload = () => {
-          console.log(file);
           const data = {
             name: file.name,
             content: reader.result,
-            size:
-              file.size > 1048576
-                ? (file.size / (1024 * 1024)).toFixed(1) + "MB"
-                : (file.size / 1024).toFixed(1) + "KB"
+            size: file.size,
+            curSize: file.size,
+            userId: this.userData._id
           };
-          this.images.push(data);
           this.$http
             .post("/images/saveImage", data)
-            .then(data => console.log(data))
+            .then(ret => {
+              data.curSize = ret.data.data.size;
+              data.content = `${this.imgBaseUrl}/${ret.data.data.imgName}`;
+              data.name = ret.data.data.imgName;
+              this.images["$" + index] = data;
+            })
             .catch(err => console.log(err));
         };
       });
@@ -113,7 +146,19 @@ export default {
     UploadFile() {
       const uploadInput = this.$refs.uploadInput;
       const files = this.fileFilter([...uploadInput.files]);
-      this.render(files);
+      const timestampArr = files.map(() => "");
+      const Obj = {};
+      timestampArr.forEach((item, index) => {
+        Obj["$" + index] = {
+          name: "",
+          content: "",
+          size: "",
+          curSize: "",
+          userId: ""
+        };
+      });
+      this.images = Obj;
+      this.render(files, timestampArr);
     },
     fileFilter(files) {
       let isImage, isTooBig;
@@ -135,6 +180,11 @@ export default {
         }
         return isImage && !isTooBig;
       });
+    },
+    transSize(size) {
+      return size > 1048576
+        ? (size / (1024 * 1024)).toFixed(1) + "MB"
+        : (size / 1024).toFixed(1) + "KB";
     }
   }
 };
@@ -190,35 +240,53 @@ export default {
       background: rgb(241, 241, 241);
       margin-bottom: 6px;
       display: flex;
-      justify-content: space-between;
+      // justify-content: space-between;
       .left {
         display: flex;
         align-items: center;
         height: 100%;
+        width: 25%;
         img {
           height: 90%;
           margin: 4px;
         }
         span {
           font-size: 14px;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden;
         }
       }
       .center {
         display: flex;
         align-items: center;
         width: 50%;
+        span {
+          margin: 0 5px;
+          display: inline-block;
+          width: 80px;
+        }
       }
       .right {
         display: flex;
+        justify-content: flex-end;
         align-items: center;
+        flex: 1;
         .downLoad {
           cursor: pointer;
           font-size: 14px;
+          margin-right: 30px;
           &:hover {
-            color: #409EFF;
+            color: #409eff;
           }
         }
       }
+    }
+  }
+  .dowmloadAll {
+    padding: 20px;
+    .el-button {
+      padding: 8px 16px;
     }
   }
   &:hover {
