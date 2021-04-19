@@ -139,6 +139,7 @@
 
 <script>
 import Identify from "@/components/Identify";
+import { mapMutations } from "vuex";
 
 export default {
   components: {
@@ -234,6 +235,7 @@ export default {
     }
   },
   methods: {
+    ...mapMutations(["updateUserData"]),
     getRandom() {
       return `${(Math.random() * 10000).toFixed(0)}`;
     },
@@ -312,6 +314,7 @@ export default {
             }
             const token = data.data.data.token;
             const userData = data.data.data.userData;
+            this.updateUserData(userData);
             window.localStorage.setItem("token", token);
             window.localStorage.setItem("userData", JSON.stringify(userData));
           })
