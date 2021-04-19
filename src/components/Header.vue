@@ -54,14 +54,13 @@
           :visible.sync="dialogVisible"
           width="50%"
         >
-          <!-- <el-input type="textarea " v-model="feedbackText" autocomplete="off"></el-input> -->
-
           <el-input
             type="textarea"
             placeholder="请输入内容"
             v-model="feedbackText"
             maxlength="100"
             show-word-limit
+            height="200"
           >
           </el-input>
           <span
@@ -71,7 +70,7 @@
             <el-button @click="dialogVisible = false">取 消</el-button>
             <el-button
               type="primary"
-              @click="dialogVisible = false"
+              @click="submitOpinion"
             >提 交</el-button>
           </span>
         </el-dialog>
@@ -140,6 +139,40 @@ export default {
       this.updateUserData(null);
       localStorage.removeItem("token");
       localStorage.removeItem("userData");
+    },
+    submitOpinion() {
+      if (this.feedbackText.length < 10) {
+        this.$message({
+          showClose: true,
+          message: "文字长度至少为10",
+          type: "warning"
+        });
+        return;
+      }
+      const data = {
+        userId: this.userData._id,
+        content: this.feedbackText
+      };
+      this.$http
+        .post("/opinion/feedback", data)
+        .then(data => {
+          if (data.data.success) {
+            this.$message({
+              showClose: true,
+              message: "提交成功",
+              type: "success"
+            });
+            this.feedbackText = "";
+            this.dialogVisible = false;
+          } else {
+            this.$message({
+              showClose: true,
+              message: data.data.data.msg,
+              type: "success"
+            });
+          }
+        })
+        .catch(err => console.log(err));
     }
   }
 };
