@@ -37,9 +37,8 @@
           <span>{{transSize(image.size)}}</span>
           <div style="width:100%;">
             <el-progress
-              :text-inside="true"
-              :stroke-width="20"
               :percentage="100"
+              status="success"
             ></el-progress>
           </div>
           <span>{{transSize(image.curSize)}}</span>
@@ -63,6 +62,7 @@
         type="primary"
         icon="el-icon-download"
         :loading="finishAll"
+        @click="downloadall"
       >下载全部</el-button>
     </div>
   </div>
@@ -78,7 +78,8 @@ export default {
       images: {},
       imgNumberLimit: config.imgNumberLimit,
       maxSize: config.maxSize,
-      imgBaseUrl: "http://localhost:3000/public/images"
+      imgBaseUrl: "http://localhost:3000/public/images",
+      zipBaseUrl: "http://localhost:3000/public/zip"
     };
   },
   computed: {
@@ -92,13 +93,12 @@ export default {
         return true;
       } else {
         return !arr.every(item => {
-          return this.images[item].curSize !== '';
+          return this.images[item].curSize !== "";
         });
       }
     }
   },
   mounted() {
-    console.log(this.userData);
     this.$nextTick(() => {
       this.$refs.select_frame.ondragleave = e => {
         e.preventDefault(); // 阻止离开时的浏览器默认行为
@@ -185,6 +185,22 @@ export default {
       return size > 1048576
         ? (size / (1024 * 1024)).toFixed(1) + "MB"
         : (size / 1024).toFixed(1) + "KB";
+    },
+    async downloadall() {
+      const list = [];
+      for (const key in this.images) {
+        list.push(this.images[key].name);
+      }
+      const data = {
+        list
+      };
+      const ret = await this.$http.post("/images/downloadall", data);
+      const fileName = ret.data.data.fileName;
+      const a = document.createElement("a");
+      a.href = this.zipBaseUrl + "/" + fileName;
+      console.log(a.href);
+      a.download = fileName;
+      a.click();
     }
   }
 };
