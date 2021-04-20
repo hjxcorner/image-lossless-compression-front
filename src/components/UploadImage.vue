@@ -35,10 +35,7 @@
         </div>
         <div class="center">
           <span>{{transSize(image.size)}}</span>
-          <div
-            class="progressbar"
-            style="width:500px;"
-          >
+          <div class="progressbar">
             <el-progress
               v-if="image.curSize"
               :text-inside="true"
@@ -58,16 +55,20 @@
             ></el-progress>
           </div>
           <span>{{transSize(image.curSize)}}</span>
+        </div>
+        <div class="right">
+          <!-- <span
+            class="downLoad"
+            @click="comparedImg(image.name,image.newName)"
+          >对比</span> -->
           <span
             class="compressionRatio"
             v-show="image.curSize"
           >{{compressionRatio(image.size, image.curSize)}}</span>
-        </div>
-        <div class="right">
-          <span class="downLoad">对比</span>
           <a
             :href="image.content"
             download
+            target="view_window"
           >
             <span class="downLoad">下载</span>
           </a>
@@ -96,22 +97,22 @@ export default {
   data() {
     return {
       images: {
-        // $0: {
-        //   curSize: 123456,
-        //   name: "前端-黄金鑫-18397857501（校招）.png",
-        //   size: 390171,
-        //   userId: "6077e4cfe6e7dd4ec83e3993",
-        //   content:
-        //     "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
-        // },
-        // $1: {
-        //   curSize: "",
-        //   name: "前端-黄金鑫-18397857501（校招）.png",
-        //   size: 390171,
-        //   userId: "6077e4cfe6e7dd4ec83e3993",
-        //   content:
-        //     "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
-        // }
+        $0: {
+          curSize: 123456,
+          name: "前端-黄金鑫-18397857501（校招）.png",
+          size: 390171,
+          userId: "6077e4cfe6e7dd4ec83e3993",
+          content:
+            "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
+        },
+        $1: {
+          curSize: "",
+          name: "前端-黄金鑫-18397857501（校招）.png",
+          size: 390171,
+          userId: "6077e4cfe6e7dd4ec83e3993",
+          content:
+            "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
+        }
       },
       imgNumberLimit: config.imgNumberLimit,
       maxSize: config.maxSize,
@@ -176,6 +177,7 @@ export default {
             .then(ret => {
               data.curSize = ret.data.data.size;
               data["newName"] = ret.data.data.imgName;
+              data.content = `${this.imgBaseUrl}/${ret.data.data.imgName}`;
               this.images["$" + index] = data;
             })
             .catch(err => console.log(err));
@@ -244,15 +246,17 @@ export default {
       const fileName = ret.data.data.fileName;
       const a = document.createElement("a");
       a.href = this.zipBaseUrl + "/" + fileName;
-      console.log(a.href);
       a.download = fileName;
       a.click();
     },
-    format(e) {
+    format() {
       return "正在压缩";
     },
-    format2(e) {
+    format2() {
       return "压缩完成";
+    },
+    comparedImg(oldName, newName) {
+      console.log(oldName, newName);
     }
   }
 };
@@ -329,6 +333,7 @@ export default {
       .center {
         display: flex;
         align-items: center;
+        justify-content: flex-start;
         width: 50%;
         span {
           margin: 0 5px;
@@ -336,16 +341,17 @@ export default {
           width: 80px;
           font-size: 14px;
         }
-        .compressionRatio {
-          color: #7eb631;
-        }
         .progressbar {
-          &::v-deep .el-progress-bar {
-            width: 400px !important;
-            .el-progress-bar__inner {
-              text-align: center !important;
-
-              .el-progress-bar__innerText {
+          width: 100%;
+          &::v-deep .el-progress {
+            text-align: left;
+            width: 100%;
+            .el-progress-bar {
+              width: 100% !important;
+              .el-progress-bar__inner {
+                text-align: center !important;
+                .el-progress-bar__innerText {
+                }
               }
             }
           }
@@ -357,6 +363,11 @@ export default {
         justify-content: flex-end;
         align-items: center;
         flex: 1;
+        .compressionRatio {
+          font-size: 14px;
+          color: #7eb631;
+          margin-right: 20px;
+        }
         .downLoad {
           cursor: pointer;
           font-size: 14px;
