@@ -32,11 +32,13 @@ export default {
   computed: {
     ...mapGetters(["userData"]),
     recordListMap() {
-      const arr = this.recordList.map(item => {
-        const date = new Date(item.timestamp);
-        item["date"] = this.transDate(date);
-        return item;
-      });
+      const arr = this.recordList
+        .map(item => {
+          const date = new Date(item.timestamp);
+          item["date"] = this.transDate(date);
+          return item;
+        })
+        .sort((a, b) => b.timestamp - a.timestamp);
       const dateList = this.unique(arr.map(item => item.date));
       const ret = dateList.map(date => {
         const obj = {};
@@ -50,17 +52,21 @@ export default {
       return ret;
     },
     feedRecordListMap() {
-      return this.feedRecordList.map(item => {
-        const date = new Date(item.timestamp);
-        item["date"] = this.transDate(date);
-        return item;
-      });
+      return this.feedRecordList
+        .map(item => {
+          const date = new Date(item.timestamp);
+          item["date"] = this.transDate(date);
+          return item;
+        })
+        .sort((a, b) => b.timestamp - a.timestamp);
     }
   },
   mounted() {
     console.log(this.userData);
-    this.getRecord();
-    this.getFeedback();
+    if (this.userData) {
+      this.getRecord();
+      this.getFeedback();
+    }
   },
   methods: {
     getRecord() {
@@ -103,7 +109,7 @@ export default {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin: 200px 0;
+    margin: 200px auto;
     .iconfont {
       font-size: 100px;
       color: #909399;
