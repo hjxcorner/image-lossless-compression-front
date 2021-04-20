@@ -47,6 +47,7 @@ export default {
         arr.forEach(item => {
           if (item.date === date) obj.list.push(item);
         });
+        obj.list = this.uniqueObj(obj.list, "imgName")
         return obj;
       });
       return ret;
@@ -89,6 +90,13 @@ export default {
     },
     unique(arr) {
       return [...new Set(arr)];
+    },
+    uniqueObj(arr, key) {
+      const obj = {};
+      return arr.reduce((current, next) => {
+        obj[next[key]] ? "" : (obj[next[key]] = true && current.push(next));
+        return current;
+      }, []);
     },
     transDate(date) {
       const yy = date.getFullYear();
