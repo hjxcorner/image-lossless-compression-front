@@ -47,7 +47,7 @@ export default {
         arr.forEach(item => {
           if (item.date === date) obj.list.push(item);
         });
-        obj.list = this.uniqueObj(obj.list, "imgName")
+        obj.list = this.uniqueObj(obj.list, "md5")
         return obj;
       });
       return ret;
@@ -112,6 +112,7 @@ export default {
 .PersonalCenter {
   display: flex;
   justify-content: space-between;
+  padding: 10px;
   .invisible {
     display: flex;
     flex-direction: column;
