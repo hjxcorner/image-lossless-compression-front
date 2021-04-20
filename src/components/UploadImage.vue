@@ -35,13 +35,33 @@
         </div>
         <div class="center">
           <span>{{transSize(image.size)}}</span>
-          <div style="width:100%;">
+          <div
+            class="progressbar"
+            style="width:500px;"
+          >
             <el-progress
+              v-if="image.curSize"
+              :text-inside="true"
               :percentage="100"
+              :format="format2"
+              :stroke-width="18"
+              class="progressbar"
               status="success"
+            ></el-progress>
+            <el-progress
+              v-else
+              :text-inside="true"
+              :percentage="100"
+              :format="format"
+              :stroke-width="18"
+              class="progressbar"
             ></el-progress>
           </div>
           <span>{{transSize(image.curSize)}}</span>
+          <span
+            class="compressionRatio"
+            v-show="image.curSize"
+          >{{compressionRatio(image.size, image.curSize)}}</span>
         </div>
         <div class="right">
           <span class="downLoad">对比</span>
@@ -75,7 +95,24 @@ import { mapGetters } from "vuex";
 export default {
   data() {
     return {
-      images: {},
+      images: {
+        // $0: {
+        //   curSize: 123456,
+        //   name: "前端-黄金鑫-18397857501（校招）.png",
+        //   size: 390171,
+        //   userId: "6077e4cfe6e7dd4ec83e3993",
+        //   content:
+        //     "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
+        // },
+        // $1: {
+        //   curSize: "",
+        //   name: "前端-黄金鑫-18397857501（校招）.png",
+        //   size: 390171,
+        //   userId: "6077e4cfe6e7dd4ec83e3993",
+        //   content:
+        //     "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
+        // }
+      },
       imgNumberLimit: config.imgNumberLimit,
       maxSize: config.maxSize,
       imgBaseUrl: "http://localhost:3000/public/images",
@@ -131,12 +168,14 @@ export default {
             curSize: file.size,
             userId: this.userData._id
           };
+          this.images["$" + index].size = file.size;
+          this.images["$" + index].content = reader.result;
+          this.images["$" + index].name = file.name;
           this.$http
             .post("/images/saveImage", data)
             .then(ret => {
               data.curSize = ret.data.data.size;
-              data.content = `${this.imgBaseUrl}/${ret.data.data.imgName}`;
-              data.name = ret.data.data.imgName;
+              data["newName"] = ret.data.data.imgName;
               this.images["$" + index] = data;
             })
             .catch(err => console.log(err));
@@ -182,14 +221,21 @@ export default {
       });
     },
     transSize(size) {
-      return size > 1048576
-        ? (size / (1024 * 1024)).toFixed(1) + "MB"
-        : (size / 1024).toFixed(1) + "KB";
+      if (size)
+        return size > 1048576
+          ? (size / (1024 * 1024)).toFixed(1) + "MB"
+          : (size / 1024).toFixed(1) + "KB";
+      else return "";
+    },
+    compressionRatio(oldSize, newSize) {
+      return newSize
+        ? -(((oldSize - newSize) / oldSize) * 100).toFixed(1) + "%"
+        : "";
     },
     async downloadall() {
       const list = [];
       for (const key in this.images) {
-        list.push(this.images[key].name);
+        list.push(this.images[key].newName);
       }
       const data = {
         list
@@ -201,6 +247,12 @@ export default {
       console.log(a.href);
       a.download = fileName;
       a.click();
+    },
+    format(e) {
+      return "正在压缩";
+    },
+    format2(e) {
+      return "压缩完成";
     }
   }
 };
@@ -273,6 +325,7 @@ export default {
           overflow: hidden;
         }
       }
+      /* eslint-disable */
       .center {
         display: flex;
         align-items: center;
@@ -281,8 +334,24 @@ export default {
           margin: 0 5px;
           display: inline-block;
           width: 80px;
+          font-size: 14px;
+        }
+        .compressionRatio {
+          color: #7eb631;
+        }
+        .progressbar {
+          &::v-deep .el-progress-bar {
+            width: 400px !important;
+            .el-progress-bar__inner {
+              text-align: center !important;
+
+              .el-progress-bar__innerText {
+              }
+            }
+          }
         }
       }
+      /* eslint-enable */
       .right {
         display: flex;
         justify-content: flex-end;
@@ -295,6 +364,10 @@ export default {
           &:hover {
             color: #409eff;
           }
+        }
+        a {
+          text-decoration: none;
+          color: #303133;
         }
       }
     }
