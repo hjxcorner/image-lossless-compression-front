@@ -318,7 +318,13 @@ export default {
             window.localStorage.setItem("token", token);
             window.localStorage.setItem("userData", JSON.stringify(userData));
           })
-          .catch(err => console.log(err));
+          .catch(err => {
+            this.$message({
+              showClose: true,
+              message: err,
+              type: "error"
+            });
+          });
       }
     },
     checkVerifiCode(rule, value, callback) {
