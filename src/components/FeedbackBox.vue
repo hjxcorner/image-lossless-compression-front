@@ -5,9 +5,10 @@
     </div>
     <template v-if="recordList.length">
       <el-card
-        v-for="(record) in recordList"
+        v-for="(record) in cardList"
         :key="record.timestamp"
         class="box-card"
+        :class="bg[record.status]"
       >
         <div class="content">
           {{record.content}}
@@ -27,6 +28,25 @@ export default {
     recordList: {
       type: Array,
       default: () => []
+    }
+  },
+  data() {
+    return {
+      bg: ["", "bg-1", "bg-2", "bg-3"]
+    };
+  },
+  computed: {
+    unsolvedList() {
+      return this.recordList.filter(item => item.status === 1)
+    },
+    solvingList() {
+      return this.recordList.filter(item => item.status === 2)
+    },
+    solvedList() {
+      return this.recordList.filter(item => item.status === 3)
+    },
+    cardList() {
+      return [...this.unsolvedList, ...this.solvingList, ...this.solvedList]
     }
   }
 };
@@ -51,8 +71,17 @@ export default {
     }
     .date {
       font-size: 12px;
-      color: #67C23A;
+      color: #67c23a;
     }
+  }
+  .bg-1 {
+    background-color: #f6f7d4;
+  }
+  .bg-2 {
+    background-color: #d2f6c5;
+  }
+  .bg-3 {
+    background-color: #99f3bd;
   }
 }
 </style>
