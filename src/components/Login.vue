@@ -86,6 +86,7 @@
             label="密码"
             :label-width="formLabelWidth"
             prop="pass"
+            type="password"
           >
             <el-input
               v-model="registeredForm.pass"
@@ -96,6 +97,7 @@
             label="确认密码"
             :label-width="formLabelWidth"
             prop="repass"
+            type="password"
           >
             <el-input
               v-model="registeredForm.repass"
