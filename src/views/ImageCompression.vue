@@ -15,5 +15,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
+.ImageCompression {
+  margin: 100px 0;
+}
 </style>
