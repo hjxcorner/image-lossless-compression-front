@@ -48,7 +48,7 @@
         </el-dropdown-menu>
       </el-dropdown>
       <div class="feedback">
-        <span @click="dialogVisible = true">意见反馈</span>
+        <span @click="feedBack">意见反馈</span>
         <el-dialog
           title="意见反馈"
           :visible.sync="dialogVisible"
@@ -173,6 +173,13 @@ export default {
           }
         })
         .catch(err => console.log(err));
+    },
+    feedBack() {
+      if(this.isLogin()) this.dialogVisible = true
+      else {
+        this.$message.warning('请先登录')
+        this.dialogFormVisible = true
+      }
     }
   }
 };
