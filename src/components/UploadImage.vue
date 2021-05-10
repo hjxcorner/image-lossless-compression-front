@@ -97,27 +97,52 @@ export default {
   data() {
     return {
       images: {
-        $0: {
-          curSize: 123456,
-          name: "前端-黄金鑫-18397857501（校招）.png",
-          size: 390171,
-          userId: "6077e4cfe6e7dd4ec83e3993",
-          content:
-            "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
-        },
-        $1: {
-          curSize: "",
-          name: "前端-黄金鑫-18397857501（校招）.png",
-          size: 390171,
-          userId: "6077e4cfe6e7dd4ec83e3993",
-          content:
-            "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
-        }
+        // $0: {
+        //   curSize: 123456,
+        //   name: "前端-黄金鑫-18397857501（校招）.png",
+        //   size: 390171,
+        //   userId: "6077e4cfe6e7dd4ec83e3993",
+        //   content:
+        //     "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
+        // },
+        // $1: {
+        //   curSize: "",
+        //   name: "前端-黄金鑫-18397857501（校招）.png",
+        //   size: 390171,
+        //   userId: "6077e4cfe6e7dd4ec83e3993",
+        //   content:
+        //     "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
+        // },
+        // $2: {
+        //   curSize: "",
+        //   name: "前端-黄金鑫-18397857501（校招）.png",
+        //   size: 390171,
+        //   userId: "6077e4cfe6e7dd4ec83e3993",
+        //   content:
+        //     "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
+        // },
+        // $3: {
+        //   curSize: "",
+        //   name: "前端-黄金鑫-18397857501（校招）.png",
+        //   size: 390171,
+        //   userId: "6077e4cfe6e7dd4ec83e3993",
+        //   content:
+        //     "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
+        // },
+        // $4: {
+        //   curSize: "",
+        //   name: "前端-黄金鑫-18397857501（校招）.png",
+        //   size: 390171,
+        //   userId: "6077e4cfe6e7dd4ec83e3993",
+        //   content:
+        //     "http://img01.yohoboys.com/contentimg/2018/11/22/13/0187be5a52edcdc999f749b9e24c7815fb.jpg"
+        // }
       },
       imgNumberLimit: config.imgNumberLimit,
       maxSize: config.maxSize,
       imgBaseUrl: "http://localhost:3000/public/images",
-      zipBaseUrl: "http://localhost:3000/public/zip"
+      zipBaseUrl: "http://localhost:3000/public/zip",
+      zipFileName: ""
     };
   },
   computed: {
@@ -134,6 +159,9 @@ export default {
           return this.images[item].curSize !== "";
         });
       }
+    },
+    isLogin() {
+      return this.userData;
     }
   },
   mounted() {
@@ -144,8 +172,9 @@ export default {
       this.$refs.select_frame.ondrop = e => {
         e.preventDefault();
         const files = [...e.dataTransfer.files];
-        const images = this.fileFilter(files);
-        this.render(images);
+        const filterFile = this.fileFilter(files);
+        this.initImages(filterFile.length);
+        this.render(filterFile);
       };
       this.$refs.select_frame.ondragenter = e => {
         e.preventDefault();
@@ -160,14 +189,13 @@ export default {
       files.forEach((file, index) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        console.log(file);
         reader.onload = () => {
           const data = {
             name: file.name,
             content: reader.result,
             size: file.size,
             curSize: file.size,
-            userId: this.userData._id
+            userId: this.isLogin ? this.userData._id : "666"
           };
           this.images["$" + index].size = file.size;
           this.images["$" + index].content = reader.result;
@@ -180,26 +208,15 @@ export default {
               data.content = `${this.imgBaseUrl}/${ret.data.data.imgName}`;
               this.images["$" + index] = data;
             })
-            .catch(err => console.log(err));
+            .catch(err => this.$message.error(err));
         };
       });
     },
     UploadFile() {
       const uploadInput = this.$refs.uploadInput;
       const files = this.fileFilter([...uploadInput.files]);
-      const timestampArr = files.map(() => "");
-      const Obj = {};
-      timestampArr.forEach((item, index) => {
-        Obj["$" + index] = {
-          name: "",
-          content: "",
-          size: "",
-          curSize: "",
-          userId: ""
-        };
-      });
-      this.images = Obj;
-      this.render(files, timestampArr);
+      this.initImages(files.length);
+      this.render(files);
     },
     fileFilter(files) {
       let isImage, isTooBig;
@@ -235,6 +252,11 @@ export default {
         : "";
     },
     async downloadall() {
+      let fileName = this.zipFileName;
+      if (fileName) {
+        this.createTab(fileName);
+        return;
+      }
       const list = [];
       for (const key in this.images) {
         list.push(this.images[key].newName);
@@ -243,7 +265,11 @@ export default {
         list
       };
       const ret = await this.$http.post("/images/downloadall", data);
-      const fileName = ret.data.data.fileName;
+      fileName = ret.data.data.fileName;
+      this.zipFileName = fileName;
+      this.createTab(fileName);
+    },
+    createTab(fileName) {
       const a = document.createElement("a");
       a.href = this.zipBaseUrl + "/" + fileName;
       a.download = fileName;
@@ -257,6 +283,19 @@ export default {
     },
     comparedImg(oldName, newName) {
       console.log(oldName, newName);
+    },
+    initImages(leng) {
+      const obj = {};
+      for (let i = 0; i < leng; i++) {
+        obj["$" + i] = {
+          name: "",
+          content: "",
+          size: "",
+          curSize: "",
+          userId: ""
+        };
+      }
+      this.images = obj;
     }
   }
 };
@@ -264,10 +303,6 @@ export default {
 
 <style lang='scss' scoped>
 .UploadImage {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
   display: flex;
   flex-direction: column;
   align-items: center;
